@@ -2,6 +2,7 @@ package com.idleman.app
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import io.flutter.plugin.common.MethodChannel
 
@@ -15,22 +16,41 @@ class AppMonitorService : AccessibilityService() {
         const val CHANNEL_NAME = "com.idleman/app_monitor"
         var instance: AppMonitorService? = null
         var methodChannel: MethodChannel? = null
+        private var lastCreateTime = 0L
     }
 
     private val blockedPackages = mutableSetOf<String>()
+    private var isInitialized = false
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Prevent rapid recreation (service restart loop protection)
+        val currentTime = System.currentTimeMillis()
+        if (instance != null && currentTime - lastCreateTime < 1000) {
+            Log.w("IdleMan", "Service recreation too fast, possible loop detected. Skipping duplicate onCreate.")
+            return
+        }
+        
+        lastCreateTime = currentTime
         instance = this
-        loadBlockedApps()
+        
+        if (!isInitialized) {
+            loadBlockedApps()
+            isInitialized = true
+            Log.d("IdleMan", "AppMonitorService created. Loaded ${blockedPackages.size} blocked apps: $blockedPackages")
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
             
+            Log.d("IdleMan", "Window state changed: $packageName")
+            
             // Check if the app is in the blocked list
             if (isAppBlocked(packageName)) {
+                Log.d("IdleMan", "BLOCKED APP DETECTED: $packageName - Launching overlay!")
                 handleBlockedApp(packageName)
             }
         }
@@ -85,6 +105,7 @@ class AppMonitorService : AccessibilityService() {
         val blockedSet = prefs.getStringSet("blocked_apps", emptySet()) ?: emptySet()
         blockedPackages.clear()
         blockedPackages.addAll(blockedSet)
+        Log.d("IdleMan", "Loaded blocked apps from prefs: $blockedPackages")
     }
 
     /**
@@ -94,8 +115,9 @@ class AppMonitorService : AccessibilityService() {
         blockedPackages.clear()
         blockedPackages.addAll(packages)
         
-        // Save to preferences
-        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
-        prefs.edit().putStringSet("blocked_apps", packages).apply()
+        Log.d("IdleMan", "Updated blocked apps in service: $blockedPackages")
+        
+        // Don't save to preferences here - MainActivity already did it
+        // Saving again causes unnecessary writes and potential loops
     }
 }

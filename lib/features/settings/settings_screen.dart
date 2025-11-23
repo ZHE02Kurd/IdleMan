@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/blocklist_provider.dart';
-import '../../widgets/neumorphic/neu_background.dart';
 import '../../widgets/neumorphic/neu_card.dart';
 import '../../widgets/neumorphic/neu_toggle.dart';
+import '../../widgets/service_status_banner.dart';
+import '../../widgets/neumorphic/neu_background.dart';
+import '../../widgets/neumorphic/neu_toggle.dart';
+import '../../widgets/neumorphic/neu_button.dart';
+import 'blocked_apps_screen.dart';
 
 /// Settings Screen
 class SettingsScreen extends ConsumerWidget {
@@ -57,6 +61,8 @@ class SettingsScreen extends ConsumerWidget {
                     horizontal: AppConstants.paddingLarge,
                   ),
                   children: [
+                    // Service status banner
+                    const ServiceStatusBanner(),
                     // Theme toggle
                     NeuCard(
                       child: Row(
@@ -108,58 +114,44 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppConstants.paddingMedium),
                     // Blocked apps section
-                    Text(
-                      AppStrings.settingsBlocklist,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: theme.mainText.withOpacity(0.7),
-                        // fontFamily removed
+                    NeuCard(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(AppConstants.paddingMedium),
+                        leading: Icon(
+                          Icons.block,
+                          color: theme.accent,
+                          size: 28,
+                        ),
+                        title: Text(
+                          'Manage Blocked Apps',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: theme.mainText,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${blocklist.where((app) => app.isBlocked).length} apps blocked',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.mainText.withOpacity(0.6),
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: theme.accent,
+                          size: 20,
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BlockedAppsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(height: AppConstants.paddingSmall),
-                    // Blocked apps list
-                    if (blocklist.isEmpty)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(AppConstants.paddingLarge),
-                          child: Text('Loading apps...'),
-                        ),
-                      )
-                    else
-                      ...blocklist.take(10).map((app) {
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              bottom: AppConstants.paddingSmall),
-                          child: NeuCard(
-                            padding:
-                                const EdgeInsets.all(AppConstants.paddingMedium),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    app.appName,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: theme.mainText,
-                                      // fontFamily removed
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: AppConstants.paddingSmall),
-                                NeuToggle(
-                                  value: app.isBlocked,
-                                  onChanged: (_) {
-                                    blocklistNotifier.toggleApp(app.packageName);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
                     const SizedBox(height: AppConstants.paddingMedium),
                     // Permissions section
                     Text(

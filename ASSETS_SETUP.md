@@ -25,18 +25,6 @@ Create app icons for different densities using the IdleMan logo:
 - `mipmap-xxhdpi/` - 144x144px
 - `mipmap-xxxhdpi/` - 192x192px
 
-**Design Specifications**:
-- Circular shape with neumorphic effect
-- "IM" text in center (IdleMan initials)
-- Use accent color (#6C63FF) for text
-- Soft shadows for depth
-- Background should match app theme
-
-**Tools for Icon Generation**:
-- Android Studio Asset Studio
-- Online tools: https://icon.kitchen/
-- Manual design in Figma/Photoshop
-
 ### 3. Splash Screen (Optional)
 
 For Android 12+, create adaptive splash screen:

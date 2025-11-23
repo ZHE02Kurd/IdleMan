@@ -7,6 +7,7 @@ import '../../core/providers/blocklist_provider.dart';
 import '../../widgets/neumorphic/neu_background.dart';
 import '../../widgets/neumorphic/neu_card.dart';
 import '../../widgets/neumorphic/neu_button.dart';
+import '../../widgets/service_status_banner.dart';
 
 /// Main Dashboard (Home Screen)
 class DashboardScreen extends ConsumerWidget {
@@ -49,7 +50,9 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppConstants.paddingXLarge),
+                const SizedBox(height: AppConstants.paddingLarge),
+                // Service status banner
+                const ServiceStatusBanner(),
                 // Status card
                 NeuCard(
                   child: Row(

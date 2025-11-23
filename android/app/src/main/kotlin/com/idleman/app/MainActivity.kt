@@ -7,6 +7,9 @@ import io.flutter.plugin.common.MethodChannel
 import android.provider.Settings
 import android.content.Intent
 import android.net.Uri
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.util.Log
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.idleman/native"
@@ -95,25 +98,47 @@ class MainActivity: FlutterActivity() {
      * Update blocked apps in the accessibility service
      */
     private fun updateBlockedApps(packages: Set<String>) {
+        // Save to SharedPreferences so it persists
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+        prefs.edit().putStringSet("blocked_apps", packages).apply()
+        
+        Log.d("IdleMan", "Saved ${packages.size} blocked apps to preferences: $packages")
+        
+        // Update the service instance if it's running
         AppMonitorService.instance?.updateBlockedApps(packages)
     }
 
     /**
      * Get list of installed apps
+     * Returns all launchable apps including system apps
      */
-    private fun getInstalledApps(): List<Map<String, String>> {
+    private fun getInstalledApps(): List<Map<String, Any>> {
         val pm = packageManager
-        val apps = pm.getInstalledApplications(0)
+        val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        
+        Log.d("IdleMan", "Total installed apps: ${apps.size}")
         
         return apps.mapNotNull { appInfo ->
             try {
+                // Get launch intent to verify the app is launchable
+                val launchIntent = pm.getLaunchIntentForPackage(appInfo.packageName)
+                if (launchIntent == null) {
+                    return@mapNotNull null
+                }
+                
+                val isSystemApp = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                
                 mapOf(
                     "packageName" to appInfo.packageName,
-                    "appName" to pm.getApplicationLabel(appInfo).toString()
+                    "appName" to pm.getApplicationLabel(appInfo).toString(),
+                    "isSystemApp" to isSystemApp
                 )
             } catch (e: Exception) {
+                Log.e("IdleMan", "Error getting app info for ${appInfo.packageName}: ${e.message}")
                 null
             }
-        }.sortedBy { it["appName"] }
+        }.sortedBy { it["appName"] as String }.also {
+            Log.d("IdleMan", "Launchable apps found: ${it.size}")
+        }
     }
 }
