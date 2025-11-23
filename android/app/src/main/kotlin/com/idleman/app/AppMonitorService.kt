@@ -76,6 +76,29 @@ class AppMonitorService : AccessibilityService() {
      * Handle detection of blocked app
      */
     private fun handleBlockedApp(packageName: String) {
+        // 🛡️ CRITICAL SAFETY CHECK: Never block ourselves!
+        if (packageName == this.packageName) {
+            Log.d("IdleMan", "SAFETY: Prevented blocking ourselves ($packageName)")
+            return
+        }
+        
+        // 🛡️ SAFETY CHECK: Don't block critical system apps
+        val criticalApps = setOf(
+            "com.android.settings",           // Settings
+            "com.android.phone",              // Phone dialer
+            "com.android.dialer",             // Alternative dialer
+            "com.google.android.dialer",      // Google Phone
+            "com.android.messaging",          // Messaging
+            "com.google.android.apps.messaging", // Google Messages
+            "com.android.mms",                // MMS
+            "com.android.contacts"            // Contacts (needed for calls)
+        )
+        
+        if (criticalApps.contains(packageName)) {
+            Log.d("IdleMan", "SAFETY: Prevented blocking critical system app ($packageName)")
+            return
+        }
+
         // Notify Flutter through MethodChannel
         methodChannel?.invokeMethod("appBlocked", mapOf(
             "packageName" to packageName,

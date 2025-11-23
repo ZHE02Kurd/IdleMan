@@ -39,9 +39,28 @@ class _BlockedAppsScreenState extends ConsumerState<BlockedAppsScreen> {
       final apps = await PlatformServices.getInstalledApps();
       // Process in isolate to avoid blocking UI
       final parsed = await compute(_parseAppsInIsolate, apps);
+      
+      // 🛡️ Filter out our own app and critical system apps to prevent accidental self-blocking
+      final criticalApps = {
+        'com.idleman.app',                      // Our app
+        'com.android.settings',                 // Settings
+        'com.android.phone',                    // Phone dialer
+        'com.android.dialer',                   // Alternative dialer
+        'com.google.android.dialer',            // Google Phone
+        'com.android.messaging',                // Messaging
+        'com.google.android.apps.messaging',    // Google Messages
+        'com.android.mms',                      // MMS
+        'com.android.contacts',                 // Contacts
+      };
+      
+      final filtered = parsed.where((app) {
+        final packageName = app['packageName'] as String;
+        return !criticalApps.contains(packageName);
+      }).toList();
+      
       if (mounted) {
         setState(() {
-          _installedApps = parsed;
+          _installedApps = filtered;
           _isLoading = false;
         });
       }

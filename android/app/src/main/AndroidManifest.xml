@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Overlay Activity for friction tasks -->
+        <!-- Overlay Activity for Friction Tasks -->
         <activity
             android:name=".OverlayActivity"
             android:theme="@style/LaunchTheme"
