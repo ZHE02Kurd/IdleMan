@@ -40,6 +40,9 @@ class AppConstants {
   // Chase game constants
   static const int chaseTargetCount = 10; // Reduced for testing
   static const double chaseButtonSize = 80.0;
+  
+  // Bypass duration (minutes)
+  static const int defaultBypassDuration = 15; // Default time granted after completing overlay
 }
 
 class AppStrings {
@@ -82,11 +85,11 @@ class AppStrings {
   static const String bureaucratTitle = 'Verification Required by IdleMan';
   static const String bureaucratReason = 'Reason';
   static const String bureaucratDuration = 'Duration';
-  static const String bureaucratCode = 'Code';
+  static const String bureaucratCode = 'Priority Level';
   static const String bureaucratSubmit = 'Submit';
   static const String bureaucratReasonHint = 'Why do you need this app?';
   static const String bureaucratDurationHint = 'How long? (minutes)';
-  static const String bureaucratCodeHint = 'Enter verification code';
+  static const String bureaucratCodeHint = '1-10 (1=lowest, 10=urgent)';
   
   static const String chaseTitle = 'Catch the Button';
   static const String chaseCounter = '0 / 100';

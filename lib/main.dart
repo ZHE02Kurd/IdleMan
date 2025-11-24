@@ -7,7 +7,7 @@ import 'features/splash/splash_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/settings/settings_screen.dart';
-import 'features/overlays/bureaucrat_overlay.dart';
+import 'features/overlays/typing_overlay.dart';
 import 'features/overlays/chase_overlay.dart';
 import 'dart:math' as math;
 
@@ -83,9 +83,9 @@ class OverlayApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
     
-    // Randomly choose between bureaucrat and chase overlay
+    // Randomly choose between typing and chase overlay
     final random = math.Random();
-    final showBureaucrat = random.nextBool();
+    final showTyping = random.nextBool();
 
     return MaterialApp(
       title: 'IdleMan Overlay',
@@ -98,7 +98,7 @@ class OverlayApp extends ConsumerWidget {
           brightness: theme.isDark ? Brightness.dark : Brightness.light,
         ),
       ),
-      home: showBureaucrat ? const BureaucratOverlay() : const ChaseOverlay(),
+      home: showTyping ? TypingOverlay() : ChaseOverlay(),
     );
   }
 }

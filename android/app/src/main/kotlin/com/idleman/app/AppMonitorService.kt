@@ -24,6 +24,8 @@ class AppMonitorService : AccessibilityService() {
     private var lastBlockedPackage: String? = null
     private var lastBlockTime: Long = 0
     private val BLOCK_COOLDOWN_MS = 3000 // 3 seconds cooldown
+    private val temporaryBypassList = mutableMapOf<String, Long>() // Package to expiry time
+    private val BYPASS_DURATION_MS = 30000 // 30 seconds access after completing task
 
     override fun onCreate() {
         super.onCreate()
@@ -79,6 +81,18 @@ class AppMonitorService : AccessibilityService() {
      * Check if an app package is blocked
      */
     private fun isAppBlocked(packageName: String): Boolean {
+        // Check if app has temporary bypass
+        val currentTime = System.currentTimeMillis()
+        val bypassExpiry = temporaryBypassList[packageName]
+        if (bypassExpiry != null && currentTime < bypassExpiry) {
+            Log.d("IdleMan", "BYPASS: $packageName has temporary access (${(bypassExpiry - currentTime) / 1000}s remaining)")
+            return false
+        } else if (bypassExpiry != null) {
+            // Expired, remove from list
+            temporaryBypassList.remove(packageName)
+            Log.d("IdleMan", "BYPASS EXPIRED: $packageName")
+        }
+        
         return blockedPackages.contains(packageName)
     }
 
@@ -135,6 +149,10 @@ class AppMonitorService : AccessibilityService() {
             Log.e("IdleMan", "Error invoking method channel: ${e.message}")
         }
 
+        // Store blocked package for bypass grant
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+        prefs.edit().putString("last_blocked_package", packageName).apply()
+        
         // Launch overlay activity
         launchOverlay()
     }
@@ -176,5 +194,17 @@ class AppMonitorService : AccessibilityService() {
         
         // Don't save to preferences here - MainActivity already did it
         // Saving again causes unnecessary writes and potential loops
+    }
+    
+    /**
+     * Grant temporary bypass for an app (called after completing overlay task)
+     * @param packageName The app package to grant bypass to
+     * @param durationMinutes How many minutes of access to grant (default 5)
+     */
+    fun grantTemporaryBypass(packageName: String, durationMinutes: Int = 5) {
+        val durationMs = durationMinutes * 60 * 1000L // Convert minutes to milliseconds
+        val expiryTime = System.currentTimeMillis() + durationMs
+        temporaryBypassList[packageName] = expiryTime
+        Log.d("IdleMan", "BYPASS GRANTED: $packageName for $durationMinutes minutes")
     }
 }

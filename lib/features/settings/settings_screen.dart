@@ -153,6 +153,68 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppConstants.paddingMedium),
+                    
+                    // Access Duration setting
+                    NeuCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.timer,
+                                  color: theme.accent,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: AppConstants.paddingMedium),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Access Duration',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.mainText,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'How long apps stay unlocked',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: theme.mainText.withOpacity(0.6),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppConstants.paddingMedium),
+                            Text(
+                              '${AppConstants.defaultBypassDuration} minutes',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: theme.accent,
+                              ),
+                            ),
+                            const SizedBox(height: AppConstants.paddingSmall),
+                            Text(
+                              'After completing a challenge, you\'ll have ${AppConstants.defaultBypassDuration} minutes of access.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.mainText.withOpacity(0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.paddingMedium),
+                    
                     // Permissions section
                     Text(
                       AppStrings.settingsPermissions,

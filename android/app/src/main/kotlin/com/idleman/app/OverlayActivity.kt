@@ -18,6 +18,23 @@ class OverlayActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "close") {
+                // Check if overlay was completed successfully
+                val success = call.argument<Boolean>("success") ?: false
+                
+                if (success) {
+                    // Get duration in minutes from overlay
+                    val durationMinutes = call.argument<Int>("durationMinutes") ?: 5
+                    
+                    // Grant temporary bypass for the blocked app
+                    val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+                    val lastBlockedPackage = prefs.getString("last_blocked_package", null)
+                    
+                    if (lastBlockedPackage != null) {
+                        AppMonitorService.instance?.grantTemporaryBypass(lastBlockedPackage, durationMinutes)
+                        android.util.Log.d("IdleMan", "Granted bypass for: $lastBlockedPackage for $durationMinutes minutes")
+                    }
+                }
+                
                 // Close the overlay and let user continue to the app
                 finish()
                 result.success(null)

@@ -68,25 +68,19 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
       return;
     }
 
-    // Additional validation for code (must be "IDLE")
-    if (_codeController.text.trim().toUpperCase() != 'IDLE') {
-      HapticFeedback.heavyImpact();
-      _shakeController.forward(from: 0.0);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid verification code'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Success - close overlay
+    // Parse duration (default to 5 minutes if invalid)
+    int durationMinutes = int.tryParse(_durationController.text.trim()) ?? 5;
+    // Clamp to reasonable range (1-120 minutes)
+    durationMinutes = durationMinutes.clamp(1, 120);
+    
+    // Success - close overlay and allow app access
     HapticFeedback.mediumImpact();
     
-    // Close the overlay activity using platform channel
-    const MethodChannel('com.idleman/overlay').invokeMethod('close');
+    // Close the overlay activity using platform channel with success flag and duration
+    const MethodChannel('com.idleman/overlay').invokeMethod('close', {
+      'success': true,
+      'durationMinutes': durationMinutes
+    });
   }
 
   @override

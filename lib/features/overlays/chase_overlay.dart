@@ -31,8 +31,11 @@ class _ChaseOverlayState extends ConsumerState<ChaseOverlay> {
         // Success - close overlay
         HapticFeedback.heavyImpact();
         
-        // Close the overlay activity using platform channel
-        const MethodChannel('com.idleman/overlay').invokeMethod('close');
+        // Close the overlay activity using platform channel with success flag
+        const MethodChannel('com.idleman/overlay').invokeMethod('close', {
+          'success': true,
+          'durationMinutes': AppConstants.defaultBypassDuration
+        });
         return;
       }
 
