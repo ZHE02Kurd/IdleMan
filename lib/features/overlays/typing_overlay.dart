@@ -243,7 +243,7 @@ class _TypingOverlayState extends ConsumerState<TypingOverlay>
                             SizedBox(
                               width: double.infinity,
                               child: NeuButton(
-                                onPressed: _handleSubmit,
+                                onTap: _handleSubmit,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: AppConstants.paddingMedium,
