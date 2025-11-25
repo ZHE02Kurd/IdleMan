@@ -153,6 +153,57 @@ class _BlockedAppsScreenState extends ConsumerState<BlockedAppsScreen> {
     return apps;
   }
 
+  Future<void> _onAppSelected(String packageName, bool isSelected) async {
+    final hasPermission = await PlatformServices.checkAccessibilityPermission();
+    if (!hasPermission) {
+      // Show a dialog explaining why the permission is needed
+      await _showPermissionDialog();
+      return;
+    }
+
+    setState(() {
+      if (isSelected) {
+        _selectedPackages.remove(packageName);
+      } else {
+        _selectedPackages.add(packageName);
+      }
+    });
+  }
+
+  Future<void> _showPermissionDialog() async {
+    final theme = ref.read(themeProvider);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.background,
+        title: Text(
+          'Permission Required',
+          style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'To block apps, IdleMan needs the Accessibility Service to be enabled. Please enable it in your device settings.',
+          style: TextStyle(color: theme.mainText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel', style: TextStyle(color: theme.accent)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await PlatformServices.requestAccessibilityPermission();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Open Settings'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
@@ -305,15 +356,7 @@ class _BlockedAppsScreenState extends ConsumerState<BlockedAppsScreen> {
                           final isSelected = _selectedPackages.contains(packageName);
                           
                           return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  _selectedPackages.remove(packageName);
-                                } else {
-                                  _selectedPackages.add(packageName);
-                                }
-                              });
-                            },
+                            onTap: () => _onAppSelected(packageName, isSelected),
                             child: NeuCard(
                               child: Stack(
                                 children: [

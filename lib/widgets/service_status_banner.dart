@@ -5,63 +5,19 @@ import '../core/services/platform_services.dart';
 import '../widgets/neumorphic/neu_card.dart';
 
 /// Banner that shows if accessibility service is enabled
-class ServiceStatusBanner extends ConsumerStatefulWidget {
-  const ServiceStatusBanner({Key? key}) : super(key: key);
+class ServiceStatusBanner extends ConsumerWidget {
+  final bool isServiceEnabled;
+
+  const ServiceStatusBanner({
+    Key? key,
+    required this.isServiceEnabled,
+  }) : super(key: key);
 
   @override
-  ConsumerState<ServiceStatusBanner> createState() => _ServiceStatusBannerState();
-}
-
-class _ServiceStatusBannerState extends ConsumerState<ServiceStatusBanner> with WidgetsBindingObserver {
-  bool _isServiceEnabled = false;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _checkServiceStatus();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Recheck when app comes to foreground
-      _checkServiceStatus();
-    }
-  }
-
-  Future<void> _checkServiceStatus() async {
-    try {
-      final isEnabled = await PlatformServices.checkAccessibilityPermission();
-      if (mounted) {
-        setState(() {
-          _isServiceEnabled = isEnabled;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
 
-    if (_isLoading) {
-      return const SizedBox.shrink();
-    }
-
-    if (_isServiceEnabled) {
+    if (isServiceEnabled) {
       // Service is enabled - show success banner
       return Padding(
         padding: const EdgeInsets.only(bottom: 16),
@@ -118,8 +74,6 @@ class _ServiceStatusBannerState extends ConsumerState<ServiceStatusBanner> with 
       child: GestureDetector(
         onTap: () async {
           await PlatformServices.requestAccessibilityPermission();
-          // Recheck after a delay
-          Future.delayed(const Duration(seconds: 2), _checkServiceStatus);
         },
         child: NeuCard(
           child: Container(

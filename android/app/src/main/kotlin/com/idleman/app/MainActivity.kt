@@ -61,6 +61,24 @@ class MainActivity: FlutterActivity() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // Check if an overlay session is active
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+        val isOverlayActive = prefs.getBoolean("is_overlay_active", false)
+
+        if (isOverlayActive) {
+            // If an overlay should be active, re-launch it to prevent bypass
+            Log.d("IdleMan", "MainActivity resumed while overlay is active. Re-launching overlay.")
+            val intent = Intent(this, OverlayActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            startActivity(intent)
+        }
+    }
+
     /**
      * Check if accessibility service is enabled
      */

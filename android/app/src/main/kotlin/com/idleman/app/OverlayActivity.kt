@@ -1,5 +1,6 @@
 package com.idleman.app
 
+import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
@@ -65,6 +66,10 @@ class OverlayActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        // Clear the overlay active flag
+        val prefs = getSharedPreferences("idleman_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("is_overlay_active", false).apply()
+        
         super.onDestroy()
         // Simply close - let Android return to previous state
         // Don't force launch home screen

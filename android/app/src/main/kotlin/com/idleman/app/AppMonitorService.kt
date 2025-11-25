@@ -1,6 +1,7 @@
 package com.idleman.app
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -161,6 +162,10 @@ class AppMonitorService : AccessibilityService() {
      * Launch the overlay activity
      */
     private fun launchOverlay() {
+        // Set a flag indicating the overlay is active
+        val prefs = getSharedPreferences("idleman_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("is_overlay_active", true).apply()
+        
         try {
             val intent = Intent(this, OverlayActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

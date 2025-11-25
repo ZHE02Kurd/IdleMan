@@ -4,17 +4,40 @@ import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/stats_provider.dart';
 import '../../core/providers/blocklist_provider.dart';
+import '../../core/services/platform_services.dart';
 import '../../widgets/neumorphic/neu_background.dart';
 import '../../widgets/neumorphic/neu_card.dart';
 import '../../widgets/neumorphic/neu_button.dart';
 import '../../widgets/service_status_banner.dart';
 
 /// Main Dashboard (Home Screen)
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _isServiceEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServiceStatus();
+  }
+
+  Future<void> _checkServiceStatus() async {
+    final isEnabled = await PlatformServices.checkAccessibilityPermission();
+    if (mounted) {
+      setState(() {
+        _isServiceEnabled = isEnabled;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
     final stats = ref.watch(statsProvider);
     final blocklist = ref.watch(blocklistProvider);
@@ -52,7 +75,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppConstants.paddingLarge),
                 // Service status banner
-                const ServiceStatusBanner(),
+                ServiceStatusBanner(isServiceEnabled: _isServiceEnabled),
                 // Status card
                 NeuCard(
                   child: Row(

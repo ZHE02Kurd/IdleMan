@@ -3,24 +3,45 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/blocklist_provider.dart';
+import '../../core/services/platform_services.dart';
 import '../../widgets/neumorphic/neu_card.dart';
 import '../../widgets/neumorphic/neu_toggle.dart';
 import '../../widgets/service_status_banner.dart';
 import '../../widgets/neumorphic/neu_background.dart';
-import '../../widgets/neumorphic/neu_toggle.dart';
 import '../../widgets/neumorphic/neu_button.dart';
 import 'blocked_apps_screen.dart';
 
 /// Settings Screen
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _isServiceEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServiceStatus();
+  }
+
+  Future<void> _checkServiceStatus() async {
+    final isEnabled = await PlatformServices.checkAccessibilityPermission();
+    if (mounted) {
+      setState(() {
+        _isServiceEnabled = isEnabled;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
     final blocklist = ref.watch(blocklistProvider);
-    final blocklistNotifier = ref.read(blocklistProvider.notifier);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -48,7 +69,6 @@ class SettingsScreen extends ConsumerWidget {
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: theme.mainText,
-                        // fontFamily removed
                       ),
                     ),
                   ],
@@ -62,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   children: [
                     // Service status banner
-                    const ServiceStatusBanner(),
+                    ServiceStatusBanner(isServiceEnabled: _isServiceEnabled),
                     // Theme toggle
                     NeuCard(
                       child: Row(
@@ -87,7 +107,6 @@ class SettingsScreen extends ConsumerWidget {
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       color: theme.mainText,
-                                      // fontFamily removed
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -98,7 +117,6 @@ class SettingsScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: theme.mainText.withOpacity(0.6),
-                                      // fontFamily removed
                                     ),
                                   ),
                                 ],
@@ -222,7 +240,6 @@ class SettingsScreen extends ConsumerWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: theme.mainText.withOpacity(0.7),
-                        // fontFamily removed
                       ),
                     ),
                     const SizedBox(height: AppConstants.paddingSmall),
@@ -245,7 +262,6 @@ class SettingsScreen extends ConsumerWidget {
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: theme.mainText,
-                                    // fontFamily removed
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -254,7 +270,6 @@ class SettingsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: theme.mainText.withOpacity(0.6),
-                                    // fontFamily removed
                                   ),
                                 ),
                               ],
