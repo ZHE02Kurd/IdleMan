@@ -55,7 +55,7 @@ class OnboardingPage extends ConsumerWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: theme.mainText.withOpacity(0.7),
+              color: theme.mainText.withOpacity(0.87),
               // fontFamily removed
               height: 1.5,
             ),

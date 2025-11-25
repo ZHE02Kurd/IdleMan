@@ -33,123 +33,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // Request permissions before going to dashboard - mandatory
-      final permissionsGranted = await _requestPermissions();
-      
-      if (permissionsGranted && mounted) {
+      if (mounted) {
         Navigator.of(context).pushReplacementNamed('/dashboard');
       }
     }
-  }
-
-  Future<bool> _requestPermissions() async {
-    bool accessibilityGranted = false;
-    bool overlayGranted = false;
-
-    // Request accessibility permission - MANDATORY
-    final hasAccessibility = await PlatformServices.checkAccessibilityPermission();
-    if (!hasAccessibility && mounted) {
-      accessibilityGranted = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.accessibility_new, color: Colors.orange),
-              SizedBox(width: 8),
-              Text('Required: Accessibility'),
-            ],
-          ),
-          content: const Text(
-            '🚨 IdleMan REQUIRES accessibility permission to detect when you open blocked apps.\n\n'
-            'Without this, the app cannot protect you from compulsive app usage.\n\n'
-            'Please enable \"IdleMan\" in Accessibility settings.',
-            style: TextStyle(fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                await PlatformServices.requestAccessibilityPermission();
-                Navigator.pop(context, false);
-              },
-              child: const Text('Open Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ) ?? false;
-    } else {
-      accessibilityGranted = hasAccessibility;
-    }
-
-    // Request overlay permission - MANDATORY
-    final hasOverlay = await PlatformServices.checkOverlayPermission();
-    if (!hasOverlay && mounted) {
-      overlayGranted = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.layers, color: Colors.orange),
-              SizedBox(width: 8),
-              Text('Required: Overlay'),
-            ],
-          ),
-          content: const Text(
-            '🚨 IdleMan REQUIRES overlay permission to show friction tasks.\n\n'
-            'Without this, the app cannot interrupt blocked apps.\n\n'
-            'Please allow \"Display over other apps\" for IdleMan.',
-            style: TextStyle(fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                await PlatformServices.requestOverlayPermission();
-                Navigator.pop(context, false);
-              },
-              child: const Text('Open Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ) ?? false;
-    } else {
-      overlayGranted = hasOverlay;
-    }
-
-    // Show final confirmation
-    if (mounted && (!accessibilityGranted || !overlayGranted)) {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Setup Incomplete'),
-          content: Text(
-            accessibilityGranted && !overlayGranted
-                ? '⚠️ Overlay permission is still required.\n\nPlease enable it in Android Settings > Apps > IdleMan > Display over other apps'
-                : !accessibilityGranted && overlayGranted
-                    ? '⚠️ Accessibility permission is still required.\n\nPlease enable it in Android Settings > Accessibility > IdleMan'
-                    : '⚠️ Both permissions are required for IdleMan to work.\n\nPlease enable them in Android Settings.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('I\'ll Enable Later'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                // Try again
-                await _requestPermissions();
-              },
-              child: const Text('Try Again', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return accessibilityGranted && overlayGranted;
   }
 
   void _skip() {
@@ -176,7 +63,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: Text(
                       AppStrings.onboardingSkip,
                       style: TextStyle(
-                        color: theme.mainText.withOpacity(0.6),
+                        color: theme.mainText.withOpacity(0.87),
                         fontSize: 16,
                         // fontFamily removed
                       ),

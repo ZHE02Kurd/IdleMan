@@ -16,7 +16,7 @@ class ThemeNotifier extends StateNotifier<NeuTheme> {
     try {
       final box = await Hive.openBox(_themeBoxName);
       final savedMode = box.get(_themeModeKey, defaultValue: 'day') as String;
-      
+
       state = savedMode == 'night' ? NeuTheme.night : NeuTheme.day;
     } catch (e) {
       // If loading fails, use default day theme
@@ -40,7 +40,8 @@ class ThemeNotifier extends StateNotifier<NeuTheme> {
   Future<void> _saveTheme() async {
     try {
       final box = await Hive.openBox(_themeBoxName);
-      await box.put(_themeModeKey, state.mode == AppThemeMode.day ? 'day' : 'night');
+      await box.put(
+          _themeModeKey, state.mode == AppThemeMode.day ? 'day' : 'night');
     } catch (e) {
       // Silently fail if save doesn't work
     }

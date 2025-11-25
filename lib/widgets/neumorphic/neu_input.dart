@@ -49,9 +49,7 @@ class NeuInput extends ConsumerWidget {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: theme.mainText.withOpacity(0.5),
-            fontSize: 16.0,
-            // fontFamily removed
+            color: theme.mainText.withOpacity(0.87),
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(AppConstants.paddingMedium),

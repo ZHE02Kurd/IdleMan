@@ -19,7 +19,6 @@ class BureaucratOverlay extends ConsumerStatefulWidget {
 class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
     with SingleTickerProviderStateMixin {
   final TextEditingController _reasonController = TextEditingController();
-  final TextEditingController _durationController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
 
   late AnimationController _shakeController;
@@ -44,7 +43,6 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
   @override
   void dispose() {
     _reasonController.dispose();
-    _durationController.dispose();
     _codeController.dispose();
     _shakeController.dispose();
     super.dispose();
@@ -53,12 +51,11 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
   void _handleSubmit() {
     // Simple validation
     if (_reasonController.text.trim().isEmpty ||
-        _durationController.text.trim().isEmpty ||
         _codeController.text.trim().isEmpty) {
       // Shake animation on failure
       HapticFeedback.heavyImpact();
       _shakeController.forward(from: 0.0);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill all fields'),
@@ -68,19 +65,12 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
       return;
     }
 
-    // Parse duration (default to 5 minutes if invalid)
-    int durationMinutes = int.tryParse(_durationController.text.trim()) ?? 5;
-    // Clamp to reasonable range (1-120 minutes)
-    durationMinutes = durationMinutes.clamp(1, 120);
-    
     // Success - close overlay and allow app access
     HapticFeedback.mediumImpact();
-    
-    // Close the overlay activity using platform channel with success flag and duration
-    const MethodChannel('com.idleman/overlay').invokeMethod('close', {
-      'success': true,
-      'durationMinutes': durationMinutes
-    });
+
+    // Close the overlay activity using platform channel with success flag
+    const MethodChannel('com.idleman/overlay')
+        .invokeMethod('close', {'success': true});
   }
 
   @override
@@ -141,7 +131,7 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
                             AppStrings.bureaucratReason,
                             style: TextStyle(
                               fontSize: 14,
-                              color: theme.mainText.withOpacity(0.7),
+                              color: theme.mainText.withOpacity(0.87),
                               // fontFamily removed
                             ),
                           ),
@@ -152,28 +142,12 @@ class _BureaucratOverlayState extends ConsumerState<BureaucratOverlay>
                             maxLines: 3,
                           ),
                           const SizedBox(height: AppConstants.paddingMedium),
-                          // Duration field
-                          Text(
-                            AppStrings.bureaucratDuration,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: theme.mainText.withOpacity(0.7),
-                              // fontFamily removed
-                            ),
-                          ),
-                          const SizedBox(height: AppConstants.paddingSmall),
-                          NeuInput(
-                            controller: _durationController,
-                            hintText: AppStrings.bureaucratDurationHint,
-                            keyboardType: TextInputType.number,
-                          ),
-                          const SizedBox(height: AppConstants.paddingMedium),
                           // Code field
                           Text(
                             AppStrings.bureaucratCode,
                             style: TextStyle(
                               fontSize: 14,
-                              color: theme.mainText.withOpacity(0.7),
+                              color: theme.mainText.withOpacity(0.87),
                               // fontFamily removed
                             ),
                           ),

@@ -54,7 +54,7 @@ class ServiceStatusBanner extends ConsumerWidget {
                       Text(
                         'IdleMan is monitoring your apps',
                         style: TextStyle(
-                          color: theme.mainText.withOpacity(0.6),
+                          color: theme.mainText.withOpacity(0.87),
                           fontSize: 12,
                         ),
                       ),

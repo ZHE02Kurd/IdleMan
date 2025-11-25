@@ -91,9 +91,7 @@ class _NeuBackgroundState extends ConsumerState<NeuBackground>
                   gradient: RadialGradient(
                     colors: [
                       theme.background.withOpacity(0.0),
-                      (theme.isDark
-                              ? theme.shadowLight
-                              : theme.shadowDark)
+                      (theme.isDark ? theme.shadowLight : theme.shadowDark)
                           .withOpacity(0.03),
                     ],
                   ),

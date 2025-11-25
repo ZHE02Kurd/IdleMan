@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 /// Service for communicating with native Android layer
 class NativeService {
   static const MethodChannel _channel = MethodChannel('com.idleman/native');
-  static const MethodChannel _monitorChannel = 
+  static const MethodChannel _monitorChannel =
       MethodChannel('com.idleman/app_monitor');
 
   /// Check if accessibility service is enabled
   static Future<bool> checkAccessibilityPermission() async {
     try {
-      final result = await _channel.invokeMethod('checkAccessibilityPermission');
+      final result =
+          await _channel.invokeMethod('checkAccessibilityPermission');
       return result as bool;
     } catch (e) {
       return false;

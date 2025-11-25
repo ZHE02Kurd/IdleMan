@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/blocklist_provider.dart';
@@ -9,7 +11,6 @@ import '../../widgets/neumorphic/neu_toggle.dart';
 import '../../widgets/service_status_banner.dart';
 import '../../widgets/neumorphic/neu_background.dart';
 import '../../widgets/neumorphic/neu_button.dart';
-import 'blocked_apps_screen.dart';
 
 /// Settings Screen
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -21,11 +22,41 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isServiceEnabled = false;
+  Duration _duration =
+      const Duration(minutes: AppConstants.defaultBypassDuration);
+  OverlayType _selectedOverlay = OverlayType.bureaucrat;
 
   @override
   void initState() {
     super.initState();
     _checkServiceStatus();
+    _loadDuration();
+    _loadOverlay();
+  }
+
+  Future<void> _loadOverlay() async {
+    final prefs = await SharedPreferences.getInstance();
+    final overlayName =
+        prefs.getString('overlay_type') ?? OverlayType.bureaucrat.name;
+    if (mounted) {
+      setState(() {
+        _selectedOverlay = OverlayType.values.firstWhere(
+          (e) => e.name == overlayName,
+          orElse: () => OverlayType.bureaucrat,
+        );
+      });
+    }
+  }
+
+  Future<void> _loadDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final minutes =
+        prefs.getInt('bypass_duration') ?? AppConstants.defaultBypassDuration;
+    if (mounted) {
+      setState(() {
+        _duration = Duration(minutes: minutes);
+      });
+    }
   }
 
   Future<void> _checkServiceStatus() async {
@@ -37,11 +68,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  void _showDurationPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext builder) {
+        return SizedBox(
+          height: 300,
+          child: CupertinoTimerPicker(
+            mode: CupertinoTimerPickerMode.hm,
+            initialTimerDuration: _duration,
+            onTimerDurationChanged: (Duration newDuration) {
+              if (newDuration.inMinutes > 0) {
+                setState(() {
+                  _duration = newDuration;
+                });
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setInt('bypass_duration', newDuration.inMinutes);
+                });
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
-    final blocklist = ref.watch(blocklistProvider);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -60,7 +115,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Icons.arrow_back,
                         color: theme.mainText,
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(true),
                     ),
                     const SizedBox(width: AppConstants.paddingSmall),
                     Text(
@@ -82,7 +137,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   children: [
                     // Service status banner
-                    ServiceStatusBanner(isServiceEnabled: _isServiceEnabled),
+                    if (!_isServiceEnabled)
+                      ServiceStatusBanner(isServiceEnabled: _isServiceEnabled),
                     // Theme toggle
                     NeuCard(
                       child: Row(
@@ -116,7 +172,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         : AppStrings.settingsThemeDay,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: theme.mainText.withOpacity(0.6),
+                                      color: theme.mainText.withOpacity(0.87),
                                     ),
                                   ),
                                 ],
@@ -131,51 +187,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: AppConstants.paddingMedium),
-                    // Blocked apps section
-                    NeuCard(
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(AppConstants.paddingMedium),
-                        leading: Icon(
-                          Icons.block,
-                          color: theme.accent,
-                          size: 28,
-                        ),
-                        title: Text(
-                          'Manage Blocked Apps',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: theme.mainText,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${blocklist.where((app) => app.isBlocked).length} apps blocked',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: theme.mainText.withOpacity(0.6),
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          color: theme.accent,
-                          size: 20,
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const BlockedAppsScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.paddingMedium),
-                    
+
                     // Access Duration setting
                     NeuCard(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                        padding:
+                            const EdgeInsets.all(AppConstants.paddingMedium),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -186,7 +203,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   color: theme.accent,
                                   size: 28,
                                 ),
-                                const SizedBox(width: AppConstants.paddingMedium),
+                                const SizedBox(
+                                    width: AppConstants.paddingMedium),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -203,7 +221,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       'How long apps stay unlocked',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: theme.mainText.withOpacity(0.6),
+                                        color: theme.mainText.withOpacity(0.87),
                                       ),
                                     ),
                                   ],
@@ -211,20 +229,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ],
                             ),
                             const SizedBox(height: AppConstants.paddingMedium),
-                            Text(
-                              '${AppConstants.defaultBypassDuration} minutes',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: theme.accent,
+                            GestureDetector(
+                              onTap: _showDurationPicker,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${_duration.inMinutes} minutes',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.accent,
+                                    ),
+                                  ),
+                                  NeuIconButton(
+                                    icon: Icons.edit,
+                                    onTap: _showDurationPicker,
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: AppConstants.paddingSmall),
                             Text(
-                              'After completing a challenge, you\'ll have ${AppConstants.defaultBypassDuration} minutes of access.',
+                              'After completing a challenge, you\'ll have ${_duration.inMinutes} minutes of access.',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: theme.mainText.withOpacity(0.6),
+                                color: theme.mainText.withOpacity(0.87),
                               ),
                             ),
                           ],
@@ -232,14 +263,89 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: AppConstants.paddingMedium),
-                    
+
+                    const SizedBox(height: AppConstants.paddingMedium),
+
+                    // Overlay Type setting
+                    NeuCard(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.all(AppConstants.paddingMedium),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.layers,
+                                  color: theme.accent,
+                                  size: 28,
+                                ),
+                                const SizedBox(
+                                    width: AppConstants.paddingMedium),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Overlay Type',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.mainText,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Choose your challenge',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: theme.mainText.withOpacity(0.87),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppConstants.paddingMedium),
+                            DropdownButton<OverlayType>(
+                              value: _selectedOverlay,
+                              isExpanded: true,
+                              underline: Container(
+                                height: 2,
+                                color: theme.accent,
+                              ),
+                              onChanged: (OverlayType? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedOverlay = newValue;
+                                  });
+                                  SharedPreferences.getInstance().then((prefs) {
+                                    prefs.setString(
+                                        'overlay_type', newValue.name);
+                                  });
+                                }
+                              },
+                              items: OverlayType.values
+                                  .map<DropdownMenuItem<OverlayType>>(
+                                      (OverlayType value) {
+                                return DropdownMenuItem<OverlayType>(
+                                  value: value,
+                                  child: Text(value.displayName),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     // Permissions section
                     Text(
                       AppStrings.settingsPermissions,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: theme.mainText.withOpacity(0.7),
+                        color: theme.mainText.withOpacity(0.87),
                       ),
                     ),
                     const SizedBox(height: AppConstants.paddingSmall),
@@ -269,15 +375,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   'Required for app monitoring',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: theme.mainText.withOpacity(0.6),
+                                    color: theme.mainText.withOpacity(0.87),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
+                            _isServiceEnabled
+                                ? Icons.check_circle
+                                : Icons.error,
+                            color:
+                                _isServiceEnabled ? Colors.green : Colors.red,
                             size: 24,
                           ),
                         ],

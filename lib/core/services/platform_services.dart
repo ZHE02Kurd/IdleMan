@@ -7,7 +7,8 @@ class PlatformServices {
   /// Check if accessibility permission is granted
   static Future<bool> checkAccessibilityPermission() async {
     try {
-      final result = await _channel.invokeMethod<bool>('checkAccessibilityPermission');
+      final result =
+          await _channel.invokeMethod<bool>('checkAccessibilityPermission');
       return result ?? false;
     } catch (e) {
       return false;
@@ -26,7 +27,8 @@ class PlatformServices {
   /// Check if overlay permission is granted
   static Future<bool> checkOverlayPermission() async {
     try {
-      final result = await _channel.invokeMethod<bool>('checkOverlayPermission');
+      final result =
+          await _channel.invokeMethod<bool>('checkOverlayPermission');
       return result ?? false;
     } catch (e) {
       return false;
@@ -45,8 +47,12 @@ class PlatformServices {
   /// Get list of installed apps
   static Future<List<Map<String, dynamic>>> getInstalledApps() async {
     try {
-      final result = await _channel.invokeMethod<List<dynamic>>('getInstalledApps');
-      return result?.map((app) => Map<String, dynamic>.from(app as Map)).toList() ?? [];
+      final result =
+          await _channel.invokeMethod<List<dynamic>>('getInstalledApps');
+      return result
+              ?.map((app) => Map<String, dynamic>.from(app as Map))
+              .toList() ??
+          [];
     } catch (e) {
       return [];
     }

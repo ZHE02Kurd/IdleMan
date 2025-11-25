@@ -110,8 +110,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     AppStrings.splashTagline,
                     style: TextStyle(
                       fontSize: 16,
-                      color: theme.mainText.withOpacity(0.7),
-                      // fontFamily removed
+                      color: theme.mainText
+                          .withOpacity(0.87), // fontFamily removed
                     ),
                   ),
                 ],

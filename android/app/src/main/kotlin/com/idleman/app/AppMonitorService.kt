@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+// import removed
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -22,9 +23,6 @@ class AppMonitorService : AccessibilityService() {
 
     private val blockedPackages = mutableSetOf<String>()
     private var isInitialized = false
-    private var lastBlockedPackage: String? = null
-    private var lastBlockTime: Long = 0
-    private val BLOCK_COOLDOWN_MS = 3000 // 3 seconds cooldown
     private val temporaryBypassList = mutableMapOf<String, Long>() // Package to expiry time
     private val BYPASS_DURATION_MS = 30000 // 30 seconds access after completing task
 
@@ -46,6 +44,14 @@ class AppMonitorService : AccessibilityService() {
             isInitialized = true
             Log.d("IdleMan", "AppMonitorService created. Loaded ${blockedPackages.size} blocked apps: $blockedPackages")
         }
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        Log.d("IdleMan", "Accessibility Service connected. Resetting overlay state.")
+        // 🛡️ SAFETY MECHANISM: Clear any stale overlay flags on service start
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+        prefs.edit().putBoolean("is_overlay_active", false).apply()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -107,20 +113,9 @@ class AppMonitorService : AccessibilityService() {
             return
         }
         
-        // 🛡️ COOLDOWN CHECK: Prevent rapid re-triggering
-        val currentTime = System.currentTimeMillis()
-        if (packageName == lastBlockedPackage && 
-            currentTime - lastBlockTime < BLOCK_COOLDOWN_MS) {
-            Log.d("IdleMan", "COOLDOWN: Ignoring rapid re-trigger of $packageName")
-            return
-        }
-        
-        // Update cooldown tracking
-        lastBlockedPackage = packageName
-        lastBlockTime = currentTime
-        
         // 🛡️ SAFETY CHECK: Don't block critical system apps
         val criticalApps = setOf(
+            applicationContext.packageName,   // 🛡️ SELF-PROTECTION
             "com.android.settings",           // Settings
             "com.android.phone",              // Phone dialer
             "com.android.dialer",             // Alternative dialer
@@ -163,11 +158,15 @@ class AppMonitorService : AccessibilityService() {
      */
     private fun launchOverlay() {
         // Set a flag indicating the overlay is active
-        val prefs = getSharedPreferences("idleman_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
         prefs.edit().putBoolean("is_overlay_active", true).apply()
         
         try {
+            val overlayName = prefs.getString("overlay_type", "bureaucrat") ?: "bureaucrat"
+            val route = "/overlay/$overlayName"
+
             val intent = Intent(this, OverlayActivity::class.java).apply {
+                putExtra("route", route)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
@@ -204,9 +203,10 @@ class AppMonitorService : AccessibilityService() {
     /**
      * Grant temporary bypass for an app (called after completing overlay task)
      * @param packageName The app package to grant bypass to
-     * @param durationMinutes How many minutes of access to grant (default 5)
      */
-    fun grantTemporaryBypass(packageName: String, durationMinutes: Int = 5) {
+    fun grantTemporaryBypass(packageName: String) {
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
+        val durationMinutes = prefs.getInt("bypass_duration", 5) // Default to 5 mins
         val durationMs = durationMinutes * 60 * 1000L // Convert minutes to milliseconds
         val expiryTime = System.currentTimeMillis() + durationMs
         temporaryBypassList[packageName] = expiryTime

@@ -50,19 +50,19 @@ class StatsNotifier extends StateNotifier<DailyStats> {
   Future<void> _loadStats() async {
     try {
       final box = await Hive.openBox(_boxName);
-      
+
       // Check if we need to reset (new day)
       final lastReset = box.get(_lastResetKey, defaultValue: 0) as int;
       final now = DateTime.now();
       final lastResetDate = DateTime.fromMillisecondsSinceEpoch(lastReset);
-      
+
       if (!_isSameDay(now, lastResetDate)) {
         await _resetDailyStats();
         return;
       }
 
       final interruptions = box.get(_interruptionsKey, defaultValue: 0) as int;
-      
+
       state = state.copyWith(
         interruptionsToday: interruptions,
         minutesSaved: interruptions * 3, // Estimate 3 min per interruption

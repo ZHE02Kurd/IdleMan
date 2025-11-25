@@ -23,19 +23,17 @@ class _ChaseOverlayState extends ConsumerState<ChaseOverlay> {
 
   void _handleTap() {
     HapticFeedback.lightImpact();
-    
+
     setState(() {
       _tapCount++;
-      
+
       if (_tapCount >= AppConstants.chaseTargetCount) {
         // Success - close overlay
         HapticFeedback.heavyImpact();
-        
+
         // Close the overlay activity using platform channel with success flag
-        const MethodChannel('com.idleman/overlay').invokeMethod('close', {
-          'success': true,
-          'durationMinutes': AppConstants.defaultBypassDuration
-        });
+        const MethodChannel('com.idleman/overlay')
+            .invokeMethod('close', {'success': true});
         return;
       }
 
@@ -46,7 +44,7 @@ class _ChaseOverlayState extends ConsumerState<ChaseOverlay> {
 
   void _teleportButton() {
     final size = MediaQuery.of(context).size;
-    
+
     // Calculate safe area within the card
     const cardPadding = AppConstants.paddingLarge * 2;
     final maxX = size.width - AppConstants.chaseButtonSize - cardPadding * 2;

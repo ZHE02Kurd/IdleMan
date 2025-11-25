@@ -6,6 +6,7 @@ import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+// import removed
 
 /**
  * Overlay Activity that displays Flutter-based friction tasks
@@ -23,16 +24,13 @@ class OverlayActivity : FlutterActivity() {
                 val success = call.argument<Boolean>("success") ?: false
                 
                 if (success) {
-                    // Get duration in minutes from overlay
-                    val durationMinutes = call.argument<Int>("durationMinutes") ?: 5
-                    
                     // Grant temporary bypass for the blocked app
                     val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
                     val lastBlockedPackage = prefs.getString("last_blocked_package", null)
                     
                     if (lastBlockedPackage != null) {
-                        AppMonitorService.instance?.grantTemporaryBypass(lastBlockedPackage, durationMinutes)
-                        android.util.Log.d("IdleMan", "Granted bypass for: $lastBlockedPackage for $durationMinutes minutes")
+                        AppMonitorService.instance?.grantTemporaryBypass(lastBlockedPackage)
+                        android.util.Log.d("IdleMan", "Granted bypass for: $lastBlockedPackage")
                     }
                 }
                 
@@ -61,13 +59,17 @@ class OverlayActivity : FlutterActivity() {
         )
     }
 
+    override fun getInitialRoute(): String {
+        return intent.getStringExtra("route") ?: "/overlay/bureaucrat"
+    }
+
     override fun getDartEntrypointFunctionName(): String {
         return "overlayMain"
     }
 
     override fun onDestroy() {
         // Clear the overlay active flag
-        val prefs = getSharedPreferences("idleman_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("idleman_prefs", MODE_PRIVATE)
         prefs.edit().putBoolean("is_overlay_active", false).apply()
         
         super.onDestroy()

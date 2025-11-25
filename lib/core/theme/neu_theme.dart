@@ -25,9 +25,9 @@ class NeuTheme {
   });
 
   /// Day mode theme
-  static const day = NeuTheme(
+  static final day = NeuTheme(
     background: Color(0xFFE0E5EC),
-    mainText: Color(0xFF4D4D4D),
+    mainText: Colors.black87,
     shadowLight: Color(0xFFFFFFFF),
     shadowDark: Color(0xFFA3B1C6),
     accent: Color(0xFF6C63FF),
@@ -45,7 +45,8 @@ class NeuTheme {
   );
 
   /// Get pop-out shadows (for buttons, cards)
-  List<BoxShadow> getPopOutShadows({double distance = 10.0, double blur = 20.0}) {
+  List<BoxShadow> getPopOutShadows(
+      {double distance = 10.0, double blur = 20.0}) {
     return [
       BoxShadow(
         color: shadowLight,
@@ -61,7 +62,8 @@ class NeuTheme {
   }
 
   /// Get pressed-in shadows (for inputs, pressed buttons)
-  List<BoxShadow> getPressedInShadows({double distance = 5.0, double blur = 10.0}) {
+  List<BoxShadow> getPressedInShadows(
+      {double distance = 5.0, double blur = 10.0}) {
     return [
       BoxShadow(
         color: shadowLight,

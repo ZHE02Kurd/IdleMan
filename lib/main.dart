@@ -13,10 +13,10 @@ import 'dart:math' as math;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -36,10 +36,10 @@ void main() async {
 @pragma('vm:entry-point')
 void overlayMain() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Hive for overlay
   await Hive.initFlutter();
-  
+
   runApp(
     const ProviderScope(
       child: OverlayApp(),
@@ -82,7 +82,7 @@ class OverlayApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
-    
+
     // Randomly choose between typing and chase overlay
     final random = math.Random();
     final showTyping = random.nextBool();

@@ -40,7 +40,7 @@ class BlocklistNotifier extends StateNotifier<List<BlockedApp>> {
   Future<void> _loadBlocklist() async {
     try {
       final box = await Hive.openBox(_boxName);
-      final savedPackages = 
+      final savedPackages =
           (box.get(_blocklistKey, defaultValue: <String>[]) as List)
               .cast<String>()
               .toSet();
@@ -134,7 +134,7 @@ class BlocklistNotifier extends StateNotifier<List<BlockedApp>> {
 }
 
 /// Provider for blocklist
-final blocklistProvider = 
+final blocklistProvider =
     StateNotifierProvider<BlocklistNotifier, List<BlockedApp>>((ref) {
   return BlocklistNotifier();
 });
