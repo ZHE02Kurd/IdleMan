@@ -205,12 +205,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: AppConstants.paddingLarge),
-              // Service status banner
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.paddingLarge),
-                child: ServiceStatusBanner(isServiceEnabled: _isServiceEnabled),
-              ),
+              // ...existing code... (ServiceStatusBanner removed)
               // Search bar
               Padding(
                 padding: const EdgeInsets.all(16),

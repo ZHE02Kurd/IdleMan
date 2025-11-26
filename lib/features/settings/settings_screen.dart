@@ -15,6 +15,54 @@ import '../../widgets/neumorphic/neu_button.dart';
 /// Settings Screen
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _isServiceEnabled = false;
+  Duration _duration = const Duration(minutes: AppConstants.defaultBypassDuration);
+  OverlayType _selectedOverlay = OverlayType.bureaucrat;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkServiceStatus();
+    _loadDuration();
+    _loadOverlay();
+  }
+
+  Future<void> _checkServiceStatus() async {
+    final isEnabled = await PlatformServices.checkAccessibilityPermission();
+    if (mounted) {
+      setState(() {
+        _isServiceEnabled = isEnabled;
+      });
+    }
+  }
+
+  Future<void> _loadDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final minutes = prefs.getInt('bypass_duration') ?? AppConstants.defaultBypassDuration;
+    if (mounted) {
+      setState(() {
+        _duration = Duration(minutes: minutes);
+      });
+    }
+  }
+
+  Future<void> _loadOverlay() async {
+    final prefs = await SharedPreferences.getInstance();
+    final overlayName = prefs.getString('overlay_type') ?? OverlayType.bureaucrat.name;
+    if (mounted) {
+      setState(() {
+        _selectedOverlay = OverlayType.values.firstWhere(
+          (e) => e.name == overlayName,
+          orElse: () => OverlayType.bureaucrat,
+        );
+      });
+    }
+  }
 
   void _showDurationPicker() {
     showModalBottomSheet(
@@ -153,10 +201,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
           ),
         ),
       ],
-    );
-  }
-        );
-      },
     );
   }
 

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
+// Ensure AppStrings is imported if not in app_constants.dart
 import '../../widgets/neumorphic/neu_button.dart';
 import '../../widgets/neumorphic/neu_background.dart';
 import '../../core/services/platform_services.dart';
 import 'onboarding_page.dart';
 
 /// Onboarding Flow with Zoom Out scroll transition
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -25,7 +28,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _nextPage() async {
+  Future<void> _skip() async {
+    final prefs = await Hive.openBox('settings');
+    await prefs.put('onboarding_complete', true);
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+    }
+  }
+
+  Future<void> _nextPage() async {
     if (_currentPage < 2) {
       _pageController.animateToPage(
         _currentPage + 1,
@@ -33,41 +44,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
+      // Mark onboarding complete
+      final prefs = await Hive.openBox('settings');
+      await prefs.put('onboarding_complete', true);
       if (mounted) {
-                  itemBuilder: (context, index) {
-                    return AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (context, child) {
-                        double value = 1.0;
-                        if (_pageController.position.haveDimensions) {
-                          value = _pageController.page! - index;
-                        }
-                        // Stronger zoom-out and fade effect with Z translation
-                        double scale = (1 - (value.abs() * 0.75)).clamp(0.45, 1.0);
-                        double opacity = (1 - (value.abs() * 0.85)).clamp(0.15, 1.0);
-                        double perspective = 0.004;
-                        double zTranslate = -120.0 * value.abs();
-                        return Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..setEntry(3, 2, perspective)
-                            ..scale(scale, scale)
-                            ..translate(0.0, 0.0, zTranslate)
-                            ..rotateY(value * 0.32),
-                          child: Opacity(
-                            opacity: opacity,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: _buildPage(index),
-                    );
-                  },
+        Navigator.of(context).pushReplacementNamed('/dashboard');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ref.watch(themeProvider);
+    return Scaffold(
+      backgroundColor: theme.background,
+      body: NeuBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Skip button
+              Padding(
+                padding: const EdgeInsets.all(AppConstants.paddingMedium),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: TextButton(
+                    onPressed: _skip,
+                    child: Text(
                       AppStrings.onboardingSkip,
                       style: TextStyle(
                         color: theme.mainText.withOpacity(0.87),
                         fontSize: 16,
-                        // fontFamily removed
                       ),
                     ),
                   ),
@@ -86,14 +92,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       animation: _pageController,
                       builder: (context, child) {
                         double value = 1.0;
-                        if (_pageController.position.haveDimensions) {
+                        if (_pageController.position.haveDimensions && _pageController.page != null) {
                           value = _pageController.page! - index;
-                          value = (1 - (value.abs() * 0.3)).clamp(0.7, 1.0);
+                        } else {
+                          value = (index == _currentPage) ? 0.0 : 1.0;
                         }
-                        return Transform.scale(
-                          scale: value,
+                        // Combine zooming (scale up), sliding, and fading out
+                        double scale = (1.0 + value.abs() * 0.35).clamp(1.0, 1.35); // subtle growth
+                        double offsetX = value * MediaQuery.of(context).size.width * 0.3; // slide left/right
+                        double opacity = (1.0 - value.abs() * 0.85).clamp(0.15, 1.0); // fades out
+                        return Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..scale(scale, scale)
+                            ..translate(offsetX, 0.0),
                           child: Opacity(
-                            opacity: value,
+                            opacity: opacity,
                             child: child,
                           ),
                         );
@@ -132,7 +146,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         color: theme.mainText,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        // fontFamily removed
                       ),
                     ),
                   ),
@@ -170,7 +183,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  Widget _buildIndicator(bool isActive, theme) {
+  Widget _buildIndicator(bool isActive, dynamic theme) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: AppConstants.animationFast),
       margin: const EdgeInsets.symmetric(horizontal: 4.0),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/constants/app_constants.dart';
 
@@ -33,10 +34,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    // Navigate to onboarding after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+    // Navigate after 3 seconds, but check onboarding_complete flag
+    Future.delayed(const Duration(seconds: 3), () async {
+      final prefs = await Hive.openBox('settings');
+      final completed = prefs.get('onboarding_complete', defaultValue: false) as bool;
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/onboarding');
+        if (completed) {
+          Navigator.of(context).pushReplacementNamed('/dashboard');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/onboarding');
+        }
       }
     });
   }
@@ -73,14 +80,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     blur: 30.0,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    'IM',
-                    style: TextStyle(
-                      fontSize: 80,
-                      fontWeight: FontWeight.bold,
-                      color: theme.accent,
-                      // fontFamily removed
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.cover,
+                    width: size.width * 0.6,
+                    height: size.width * 0.6,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        'IM',
+                        style: TextStyle(
+                          fontSize: 80,
+                          fontWeight: FontWeight.bold,
+                          color: theme.accent,
+                        ),
+                      ),
                     ),
                   ),
                 ),
